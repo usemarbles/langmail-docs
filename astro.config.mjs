@@ -8,9 +8,9 @@ export default defineConfig({
     starlight({
       title: "langmail",
       customCss: ["./src/styles/theme.css"],
-      social: {
-        github: "https://github.com/usemarbles/langmail",
-      },
+      social: [
+        { icon: "github", label: "GitHub", href: "https://github.com/usemarbles/langmail" },
+      ],
       head: [
         {
           tag: "link",
