@@ -1,0 +1,95 @@
+---
+const { sidebar } = Astro.locals.starlightRoute;
+---
+
+<nav class="lm-sidebar" aria-label="Main">
+  {sidebar.map((entry, i) => (
+    <>
+      {i > 0 && <div class="sidebar-divider"></div>}
+      <div class="sidebar-section">
+        {entry.type === 'group' && (
+          <>
+            <span class="sidebar-group-label">{entry.label}</span>
+            {entry.entries.map((item) => (
+              item.type === 'link' && (
+                <a
+                  href={item.href}
+                  aria-current={item.isCurrent ? 'page' : undefined}
+                  class:list={["sidebar-item", { active: item.isCurrent }]}
+                >
+                  {item.label}
+                </a>
+              )
+            ))}
+          </>
+        )}
+        {entry.type === 'link' && (
+          <a
+            href={entry.href}
+            aria-current={entry.isCurrent ? 'page' : undefined}
+            class:list={["sidebar-item", { active: entry.isCurrent }]}
+          >
+            {entry.label}
+          </a>
+        )}
+      </div>
+    </>
+  ))}
+</nav>
+
+<style>
+  .lm-sidebar {
+    padding: 32px 0 64px;
+  }
+
+  .sidebar-section {
+    padding: 0 16px;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-group-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sl-color-gray-3);
+    padding: 16px 12px 8px;
+    display: block;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--sl-color-gray-3);
+    padding: 7px 12px;
+    border-radius: 4px;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    user-select: none;
+    text-decoration: none;
+  }
+
+  .sidebar-item:hover {
+    color: var(--sl-color-white);
+    background: color-mix(in srgb, var(--sl-color-white) 3%, transparent);
+  }
+
+  .sidebar-item.active,
+  .sidebar-item[aria-current='page'] {
+    color: var(--sl-color-accent);
+    border-left-color: var(--sl-color-accent);
+    background: color-mix(in srgb, var(--sl-color-accent) 6%, transparent);
+    font-weight: 300;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--sl-color-hairline-light);
+    margin: 12px 16px;
+  }
+</style>

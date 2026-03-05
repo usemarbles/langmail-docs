@@ -1,0 +1,64 @@
+---
+const PAGE_TITLE_ID = '_top';
+
+const route = Astro.locals.starlightRoute;
+const title = route.entry.data.title;
+const description = route.entry.data.description;
+
+// Find the group containing the current page
+function findGroupLabel(entries: SidebarEntry[]): string | null {
+  for (const entry of entries) {
+    if (entry.type === 'group') {
+      for (const item of entry.entries) {
+        if (item.type === 'link' && item.isCurrent) {
+          return entry.label;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+const groupLabel = findGroupLabel(route.sidebar);
+---
+
+<div class="page-header">
+  {groupLabel && <div class="page-eyebrow">{groupLabel}</div>}
+  <h1 id={PAGE_TITLE_ID} class="page-title">{title}</h1>
+  {description && <p class="page-desc">{description}</p>}
+</div>
+
+<style>
+  .page-header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--sl-color-hairline-light);
+  }
+
+  .page-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sl-color-accent);
+    margin-bottom: 12px;
+  }
+
+  .page-title {
+    font-family: 'Lora', serif !important;
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--sl-color-white);
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+
+  .page-desc {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--sl-color-gray-3);
+    line-height: 1.7;
+    max-width: 560px;
+  }
+</style>

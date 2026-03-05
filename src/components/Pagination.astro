@@ -1,0 +1,71 @@
+---
+const { pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+---
+
+{(prev || next) && (
+  <div class="page-nav">
+    {prev ? (
+      <a href={prev.href} class="page-nav-btn" rel="prev">
+        <span class="page-nav-dir">&larr; Previous</span>
+        <span class="page-nav-title">{prev.label}</span>
+      </a>
+    ) : <div />}
+    {next ? (
+      <a href={next.href} class="page-nav-btn next" rel="next">
+        <span class="page-nav-dir">Next &rarr;</span>
+        <span class="page-nav-title">{next.label}</span>
+      </a>
+    ) : <div />}
+  </div>
+)}
+
+<style>
+  .page-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--sl-color-hairline-light);
+  }
+
+  .page-nav-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-decoration: none;
+    padding: 16px 20px;
+    background: var(--lm-surface);
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 4px;
+    flex: 1;
+    max-width: 240px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .page-nav-btn:hover {
+    border-color: var(--lm-amber-d);
+  }
+
+  .page-nav-btn.next {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .page-nav-dir {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--sl-color-gray-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .page-nav-title {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--sl-color-accent);
+  }
+</style>
