@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>langmail — Component Patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0F0D0A;
+    --surface:   #1A1610;
+    --surface-2: #221D14;
+    --border:    #2E2618;
+    --amber:     #E8A838;
+    --amber-d:   #C48A20;
+    --amber-sub: #F0C878;
+    --text-1:    #F4F0E8;
+    --text-2:    #8A7A5A;
+    --text-3:    #4A4030;
+    --code-bg:   #130F08;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: 'Geist', sans-serif;
+    padding: 48px 40px;
+  }
+
+  /* ── Page header ── */
+  .page-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+
+  .page-title {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 56px;
+    font-weight: 300;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-bottom: 20px;
+    margin-top: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label:first-of-type { margin-top: 0; }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Component panel ── */
+  .comp-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px 36px;
+    margin-bottom: 2px;
+  }
+
+  .comp-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .comp-row:last-child { margin-bottom: 0; }
+
+  .comp-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 0.06em;
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  /* ─────────────────────────────────────────
+     01 — BUTTONS
+  ───────────────────────────────────────── */
+
+  /* Primary */
+  .btn-primary {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #0F0D0A;
+    background: var(--amber);
+    padding: 9px 20px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .btn-primary:hover { background: var(--amber-d); }
+
+  /* Secondary / outline */
+  .btn-secondary {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-1);
+    background: transparent;
+    padding: 9px 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: border-color 0.15s, color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--text-2);
+    color: var(--text-1);
+  }
+
+  /* Ghost */
+  .btn-ghost {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-2);
+    background: transparent;
+    padding: 9px 20px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .btn-ghost:hover { color: var(--text-1); }
+
+  /* Small variant */
+  .btn-sm {
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  /* Icon button */
+  .btn-icon {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-2);
+    background: var(--surface-2);
+    padding: 7px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .btn-icon:hover {
+    color: var(--text-1);
+    border-color: var(--text-2);
+  }
+
+  /* ─────────────────────────────────────────
+     02 — CODE BLOCKS
+  ───────────────────────────────────────── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .code-lang {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .code-copy {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .code-copy:hover { color: var(--amber); }
+
+  .code-body {
+    padding: 20px 22px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-1);
+  }
+
+  .kw  { color: var(--amber); }
+  .str { color: var(--amber-sub); }
+  .cm  { color: var(--text-2); font-style: italic; }
+  .fn  { color: var(--text-1); }
+  .ty  { color: #B8A878; }
+
+  /* Inline code */
+  .inline-code {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.875em;
+    color: var(--amber-sub);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* ─────────────────────────────────────────
+     03 — BADGES & PILLS
+  ───────────────────────────────────────── */
+  .badge {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .badge-amber {
+    color: var(--amber);
+    border: 1px solid var(--amber-d);
+    background: color-mix(in srgb, var(--amber) 8%, transparent);
+  }
+
+  .badge-neutral {
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .badge-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .pill {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 5px 13px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .pill-active {
+    color: var(--amber);
+    border: 1px solid var(--amber-d);
+    background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+  }
+
+  .pill-inactive {
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  /* Version badge */
+  .version-badge {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .version-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+  }
+
+  /* ─────────────────────────────────────────
+     04 — NAV
+  ───────────────────────────────────────── */
+  .nav-full {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .wordmark { font-family: 'Lora', serif; letter-spacing: -0.01em; }
+  .wordmark .lang { color: var(--text-1); }
+  .wordmark .mail { color: var(--amber); }
+
+  .nav-center {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .nav-link {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-2);
+    padding: 6px 14px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    cursor: pointer;
+  }
+
+  .nav-link:hover { color: var(--text-1); }
+  .nav-link.active { color: var(--text-1); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-github {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .nav-github:hover {
+    color: var(--text-1);
+    border-color: var(--text-2);
+  }
+
+  /* Docs sidebar nav item */
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 200px;
+  }
+
+  .sidebar-group {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    padding: 10px 12px 6px;
+  }
+
+  .sidebar-item {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-2);
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .sidebar-item:hover { color: var(--text-1); }
+
+  .sidebar-item.active {
+    color: var(--amber);
+    border-left-color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 6%, transparent);
+  }
+
+  /* ─────────────────────────────────────────
+     05 — CARDS
+  ───────────────────────────────────────── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px 28px;
+    border-radius: 0;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .card:hover { border-color: var(--amber-d); }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: var(--amber);
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px;
+  }
+
+  .card-title {
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-1);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-body {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  .card-arrow {
+    font-size: 16px;
+    color: var(--text-3);
+    margin-top: 16px;
+    transition: color 0.15s, transform 0.15s;
+  }
+
+  .card:hover .card-arrow {
+    color: var(--amber);
+    transform: translateX(3px);
+  }
+
+  /* Feature card — horizontal */
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .feature-card:hover { border-color: var(--amber-d); }
+
+  .feature-icon {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    color: var(--amber);
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .feature-text {}
+  .feature-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-1);
+    margin-bottom: 4px;
+  }
+
+  .feature-desc {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+
+  /* ─────────────────────────────────────────
+     06 — TYPOGRAPHY SCALE
+  ───────────────────────────────────────── */
+  .type-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .type-row {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  .type-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .type-meta {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    width: 140px;
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+
+  /* ─────────────────────────────────────────
+     07 — CALLOUTS / ADMONITIONS
+  ───────────────────────────────────────── */
+  .callout {
+    border-left: 3px solid;
+    padding: 14px 18px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .callout-note {
+    border-color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 7%, var(--surface));
+  }
+
+  .callout-warning {
+    border-color: #C07830;
+    background: color-mix(in srgb, #C07830 7%, var(--surface));
+  }
+
+  .callout-tip {
+    border-color: var(--text-2);
+    background: var(--surface);
+  }
+
+  .callout-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .callout-note .callout-label { color: var(--amber); }
+  .callout-warning .callout-label { color: #C07830; }
+  .callout-tip .callout-label { color: var(--text-2); }
+
+  .callout-body {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-1);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-label">langmail.dev — component patterns</div>
+<div class="page-title">All reusable UI building blocks for the website and documentation</div>
+
+<!-- ─────────────────────────────────────
+     01 — BUTTONS
+───────────────────────────────────── -->
+<div class="section-label">01 — Buttons</div>
+<div class="comp-panel">
+  <div class="comp-row">
+    <div class="comp-label">Primary</div>
+    <button class="btn-primary">Get Started</button>
+    <button class="btn-primary">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M7.5 1L13.5 7.5L7.5 14M13.5 7.5H1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      View Docs
+    </button>
+    <button class="btn-primary btn-sm">Copy</button>
+  </div>
+  <div class="comp-row">
+    <div class="comp-label">Secondary</div>
+    <button class="btn-secondary">View on GitHub</button>
+    <button class="btn-secondary">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M1 7.5H14M8 2L13.5 7.5L8 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      API Reference
+    </button>
+    <button class="btn-secondary btn-sm">Changelog</button>
+  </div>
+  <div class="comp-row">
+    <div class="comp-label">Ghost</div>
+    <button class="btn-ghost">Learn more</button>
+    <button class="btn-ghost">← Back</button>
+  </div>
+  <div class="comp-row">
+    <div class="comp-label">Icon</div>
+    <button class="btn-icon">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="13" height="13" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M4 4h7M4 7.5h7M4 11h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      npm
+    </button>
+    <button class="btn-icon">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M7.5 1L9.5 5.5H14L10.5 8.5L12 13L7.5 10.5L3 13L4.5 8.5L1 5.5H5.5L7.5 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      Star on GitHub
+    </button>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────
+     02 — CODE BLOCKS
+───────────────────────────────────── -->
+<div class="section-label">02 — Code blocks</div>
+<div class="comp-panel">
+
+  <div class="comp-row" style="align-items:flex-start; gap: 24px;">
+    <div style="flex:1">
+      <!-- Full code block with header -->
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-lang">typescript</div>
+          <div class="code-copy">copy</div>
+        </div>
+        <div class="code-body">
+<span class="kw">import</span> { <span class="fn">preprocessEmail</span>, <span class="fn">toLLMContext</span> } <span class="kw">from</span> <span class="str">"langmail"</span><br>
+<br>
+<span class="kw">const</span> raw = <span class="fn">fs</span>.readFileSync(<span class="str">"email.eml"</span>, <span class="str">"utf8"</span>)<br>
+<span class="kw">const</span> parsed  = <span class="kw">await</span> <span class="fn">preprocessEmail</span>(raw)<br>
+<span class="kw">const</span> context = <span class="fn">toLLMContext</span>(parsed)<br>
+<br>
+<span class="cm">// context is clean Markdown, ready for your LLM</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1">
+      <!-- Shell / install block -->
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-lang">shell</div>
+          <div class="code-copy">copy</div>
+        </div>
+        <div class="code-body">
+<span class="cm"># Node.js</span><br>
+<span class="kw">npm</span> install langmail<br>
+<br>
+<span class="cm"># Python</span><br>
+<span class="kw">pip</span> install langmail<br>
+<br>
+<span class="cm"># Rust</span><br>
+<span class="kw">cargo</span> add langmail-core
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline code usage -->
+  <div class="comp-row" style="margin-top: 8px;">
+    <div class="comp-label">Inline</div>
+    <div style="font-size:14px; font-weight:300; color:var(--text-1); line-height:1.7">
+      Call <span class="inline-code">preprocessEmail()</span> to parse the raw message, then pass the result to <span class="inline-code">toLLMContext()</span> to get clean Markdown output.
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────────────────────────────────
+     03 — BADGES & PILLS
+───────────────────────────────────── -->
+<div class="section-label">03 — Badges & pills</div>
+<div class="comp-panel">
+  <div class="comp-row">
+    <div class="comp-label">Badges</div>
+    <div class="badge badge-amber"><div class="badge-dot"></div>v0.1.0</div>
+    <div class="badge badge-amber">New</div>
+    <div class="badge badge-neutral">Stable</div>
+    <div class="badge badge-neutral">Deprecated</div>
+    <div class="version-badge"><div class="dot"></div>v0.1.0 — crates.io</div>
+  </div>
+  <div class="comp-row">
+    <div class="comp-label">Feature pills</div>
+    <div class="pill pill-active">HTML → Markdown</div>
+    <div class="pill pill-active">Reply detection</div>
+    <div class="pill pill-inactive">Signature stripping</div>
+    <div class="pill pill-inactive">CTA extraction</div>
+    <div class="pill pill-inactive">Multi-language</div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────
+     04 — NAVIGATION
+───────────────────────────────────── -->
+<div class="section-label">04 — Navigation</div>
+<div class="comp-panel">
+
+  <!-- Top nav -->
+  <div style="margin-bottom: 32px;">
+    <div class="comp-label" style="margin-bottom: 16px;">Top nav</div>
+    <nav class="nav-full">
+      <div class="nav-logo-wrap">
+        <svg width="22" height="16" viewBox="0 0 40 30" fill="none">
+          <rect x="1" y="1" width="38" height="28" rx="2" stroke="#F4F0E8" stroke-width="1.5"/>
+          <path d="M1 4L20 17L39 4" stroke="#E8A838" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark" style="font-size:18px"><span class="lang">lang</span><span class="mail">mail</span></div>
+      </div>
+      <div class="nav-center">
+        <div class="nav-link active">Docs</div>
+        <div class="nav-link">API</div>
+        <div class="nav-link">Changelog</div>
+      </div>
+      <div class="nav-right">
+        <div class="nav-github">
+          <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M7.5 1C3.91 1 1 3.91 1 7.5c0 2.87 1.86 5.3 4.44 6.16.32.06.44-.14.44-.31v-1.08c-1.8.39-2.18-.87-2.18-.87-.3-.75-.72-.95-.72-.95-.59-.4.04-.4.04-.4.65.05 1 .67 1 .67.58 1 1.52.71 1.89.54.06-.42.23-.71.41-.87-1.44-.16-2.95-.72-2.95-3.2 0-.71.25-1.28.67-1.74-.07-.16-.29-.82.06-1.71 0 0 .55-.18 1.8.67A6.3 6.3 0 017.5 4.8c.56 0 1.12.07 1.64.22 1.25-.85 1.8-.67 1.8-.67.35.89.13 1.55.06 1.71.42.46.67 1.03.67 1.74 0 2.49-1.52 3.04-2.96 3.2.23.2.44.59.44 1.2v1.77c0 .17.11.37.44.31A6.5 6.5 0 0014 7.5C14 3.91 11.09 1 7.5 1z" fill="currentColor"/></svg>
+          GitHub
+        </div>
+        <button class="btn-primary btn-sm">Get Started</button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Sidebar nav -->
+  <div>
+    <div class="comp-label" style="margin-bottom: 16px;">Docs sidebar</div>
+    <div class="sidebar-nav">
+      <div class="sidebar-group">Getting Started</div>
+      <div class="sidebar-item active">Introduction</div>
+      <div class="sidebar-item">Installation</div>
+      <div class="sidebar-item">Quick Start</div>
+      <div class="sidebar-group">API Reference</div>
+      <div class="sidebar-item">preprocessEmail</div>
+      <div class="sidebar-item">toLLMContext</div>
+      <div class="sidebar-item">Types</div>
+      <div class="sidebar-group">Guides</div>
+      <div class="sidebar-item">CTA Extraction</div>
+      <div class="sidebar-item">Reply Detection</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────────────────────────────────
+     05 — CARDS
+───────────────────────────────────── -->
+<div class="section-label">05 — Cards</div>
+
+<div class="cards-grid" style="margin-bottom: 2px;">
+  <div class="card">
+    <div class="card-icon">{ }</div>
+    <div class="card-title">API Reference</div>
+    <div class="card-body">Complete documentation for all exported functions, types, and configuration options.</div>
+    <div class="card-arrow">→</div>
+  </div>
+  <div class="card">
+    <div class="card-icon">⚡</div>
+    <div class="card-title">Quick Start</div>
+    <div class="card-body">Parse your first email in under two minutes. Works with Node.js, Python, and Rust.</div>
+    <div class="card-arrow">→</div>
+  </div>
+  <div class="card">
+    <div class="card-icon"># _</div>
+    <div class="card-title">Output Formats</div>
+    <div class="card-body">Understand how langmail serializes emails into Markdown for LLM consumption.</div>
+    <div class="card-arrow">→</div>
+  </div>
+</div>
+
+<!-- Feature cards horizontal -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px;">
+  <div class="feature-card">
+    <div class="feature-icon">→</div>
+    <div class="feature-text">
+      <div class="feature-title">HTML to Markdown conversion</div>
+      <div class="feature-desc">Semantic HTML structure is preserved as Markdown. Links keep their anchor text. Images are stripped.</div>
+    </div>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">→</div>
+    <div class="feature-text">
+      <div class="feature-title">Quoted reply detection</div>
+      <div class="feature-desc">Identifies and removes quoted content across Gmail, Outlook, Apple Mail, and custom clients.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────
+     06 — TYPOGRAPHY SCALE
+───────────────────────────────────── -->
+<div class="section-label">06 — Typography scale</div>
+<div class="comp-panel">
+  <div class="type-scale">
+    <div class="type-row">
+      <div class="type-meta">Display<br>Lora / 48px / 1.05</div>
+      <div style="font-family:'Lora',serif; font-size:48px; line-height:1.05; letter-spacing:-0.01em; color:var(--text-1)">Email for <em style="color:var(--amber)">language models</em></div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">H1<br>Lora / 36px / 1.1</div>
+      <div style="font-family:'Lora',serif; font-size:36px; line-height:1.1; letter-spacing:-0.01em; color:var(--text-1)">Getting Started</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">H2<br>Lora / 24px / 1.2</div>
+      <div style="font-family:'Lora',serif; font-size:24px; line-height:1.2; color:var(--text-1)">Installation</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">H3<br>Geist 500 / 16px / 1.3</div>
+      <div style="font-family:'Geist',sans-serif; font-size:16px; font-weight:500; line-height:1.3; color:var(--text-1)">Function Reference</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">Body<br>Geist 300 / 15px / 1.7</div>
+      <div style="font-family:'Geist',sans-serif; font-size:15px; font-weight:300; line-height:1.7; color:var(--text-1); max-width:520px">The <span class="inline-code">preprocessEmail</span> function accepts a raw RFC 5322 email string and returns a structured object. It handles MIME multipart messages, HTML and plain-text variants, and normalises all character encodings.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">Small<br>Geist 300 / 13px / 1.6</div>
+      <div style="font-family:'Geist',sans-serif; font-size:13px; font-weight:300; line-height:1.6; color:var(--text-2)">Released under the MIT license. Maintained by Marbles.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">Label<br>Geist Mono / 11px / 1.4<br>Uppercase</div>
+      <div style="font-family:'Geist Mono',monospace; font-size:11px; line-height:1.4; letter-spacing:0.1em; text-transform:uppercase; color:var(--amber)">v0.1.0 — now on crates.io</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────
+     07 — CALLOUTS
+───────────────────────────────────── -->
+<div class="section-label">07 — Callouts / admonitions</div>
+<div class="comp-panel" style="display:flex; flex-direction:column; gap:12px;">
+  <div class="callout callout-note">
+    <div class="callout-label">Note</div>
+    <div class="callout-body">The <span class="inline-code">toLLMContext</span> function returns a Markdown string by default. Pass <span class="inline-code">{ format: "plain" }</span> to get plain text instead.</div>
+  </div>
+  <div class="callout callout-warning">
+    <div class="callout-label">Warning</div>
+    <div class="callout-body">Quoted reply detection is heuristic-based. Accuracy varies across non-standard email clients.</div>
+  </div>
+  <div class="callout callout-tip">
+    <div class="callout-label">Tip</div>
+    <div class="callout-body">Strip URLs before passing to your LLM. They add token count with no semantic value.</div>
+  </div>
+</div>
+
+</body>
+</html>
