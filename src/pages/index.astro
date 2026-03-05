@@ -1,0 +1,900 @@
+---
+// Custom landing page — not a Starlight page
+---
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>langmail — Email preprocessing for LLM consumption</title>
+<meta name="description" content="Parse, clean, and structure raw emails into formats optimized for language models. Written in Rust, available for Node.js and Python.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0F0D0A;
+    --surface:   #1A1610;
+    --surface-2: #221D14;
+    --border:    #2E2618;
+    --amber:     #E8A838;
+    --amber-d:   #C48A20;
+    --amber-sub: #F0C878;
+    --text-1:    #F4F0E8;
+    --text-2:    #8A7A5A;
+    --text-3:    #4A4030;
+    --code-bg:   #130F08;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: 'Geist', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .wordmark {
+    font-family: 'Lora', serif;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .wordmark .lang { color: var(--text-1); }
+  .wordmark .mail { color: var(--amber); }
+
+  .nav-center {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .nav-link {
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-2);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+
+  .nav-link:hover { color: var(--text-1); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .nav-github-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-2);
+    text-decoration: none;
+    padding: 4px;
+    transition: color 0.15s;
+  }
+
+  .nav-github-icon:hover { color: var(--text-1); }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--bg);
+    background: var(--amber);
+    text-decoration: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-primary:hover { background: var(--amber-d); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-1);
+    background: transparent;
+    text-decoration: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .btn-secondary:hover { border-color: var(--text-2); }
+
+  /* HERO */
+  .hero {
+    padding: 96px 0 80px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, color-mix(in srgb, var(--amber) 6%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.1s;
+  }
+
+  .eyebrow-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+  }
+
+  .hero-headline {
+    font-family: 'Lora', serif;
+    font-size: 52px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-1);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero-headline em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.7;
+    max-width: 420px;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.3s;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.4s;
+  }
+
+  .hero-right {
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.35s;
+  }
+
+  .install-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 2px;
+  }
+
+  .install-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  .install-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .copy-btn {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+    letter-spacing: 0.06em;
+  }
+
+  .copy-btn:hover { color: var(--amber); }
+
+  .install-body {
+    padding: 18px 20px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text-1);
+  }
+
+  .kw  { color: var(--amber); }
+  .str { color: var(--amber-sub); }
+  .cm  { color: var(--text-2); font-style: italic; }
+  .fn  { color: var(--text-1); }
+  .op  { color: var(--text-2); }
+
+  /* FEATURES */
+  .features {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    transition: border-color 0.2s;
+    cursor: default;
+  }
+
+  .feature-card:hover {
+    border-color: var(--amber-d);
+  }
+
+  .feature-card:hover .feature-icon {
+    color: var(--amber);
+  }
+
+  .feature-icon {
+    font-family: 'Geist Mono', monospace;
+    font-size: 18px;
+    color: var(--text-3);
+    margin-bottom: 16px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+
+  .feature-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-1);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .feature-desc {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.65;
+  }
+
+  /* CODE EXAMPLE */
+  .code-section {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-section-inner {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  .code-headline {
+    font-family: 'Lora', serif;
+    font-size: 32px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--text-1);
+    margin-bottom: 16px;
+  }
+
+  .code-headline em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .code-desc {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .lang-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+  }
+
+  .lang-tab {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    padding: 7px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .lang-tab.active {
+    color: var(--amber);
+    background: var(--code-bg);
+    border-color: var(--border);
+    border-bottom-color: var(--code-bg);
+  }
+
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 0 4px 4px 4px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .code-filename {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+  }
+
+  .code-body {
+    padding: 22px 22px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+
+  /* Output block */
+  .output-block {
+    margin-top: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .output-header {
+    padding: 8px 18px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .output-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+  }
+
+  .output-body {
+    padding: 18px 20px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-2);
+  }
+
+  .output-body .out-key { color: var(--text-2); }
+  .output-body .out-val { color: var(--amber-sub); }
+  .output-body .out-md  { color: var(--text-1); opacity: 0.7; }
+
+  /* Steps list */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    flex-shrink: 0;
+    width: 20px;
+    padding-top: 1px;
+  }
+
+  .step-text {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  .step-text strong {
+    color: var(--text-1);
+    font-weight: 500;
+  }
+
+  .inline-code {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.9em;
+    color: var(--amber-sub);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+  }
+
+  .footer-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .footer-link {
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-link:hover { color: var(--text-1); }
+
+  .footer-right {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-right a {
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-right a:hover { color: var(--amber); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+    .hero-headline { font-size: 40px; }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .code-section-inner { grid-template-columns: 1fr; gap: 40px; }
+    .container { padding: 0 24px; }
+  }
+
+  @media (max-width: 600px) {
+    .hero-headline { font-size: 32px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .nav-center { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+
+      <a href="/" class="nav-logo">
+        <svg width="22" height="16" viewBox="0 0 40 30" fill="none">
+          <rect x="1" y="1" width="38" height="28" rx="2" stroke="#F4F0E8" stroke-width="1.5"/>
+          <path d="M1 4L20 17L39 4" stroke="#E8A838" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark"><span class="lang">lang</span><span class="mail">mail</span></div>
+      </a>
+
+      <div class="nav-center">
+        <a href="/introduction/" class="nav-link">Docs</a>
+      </div>
+
+      <div class="nav-right">
+        <a href="https://github.com/usemarbles/langmail" class="nav-github-icon" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg width="20" height="20" viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 1C3.91 1 1 3.91 1 7.5c0 2.87 1.86 5.3 4.44 6.16.32.06.44-.14.44-.31v-1.08c-1.8.39-2.18-.87-2.18-.87-.3-.75-.72-.95-.72-.95-.59-.4.04-.4.04-.4.65.05 1 .67 1 .67.58 1 1.52.71 1.89.54.06-.42.23-.71.41-.87-1.44-.16-2.95-.72-2.95-3.2 0-.71.25-1.28.67-1.74-.07-.16-.29-.82.06-1.71 0 0 .55-.18 1.8.67A6.3 6.3 0 017.5 4.8c.56 0 1.12.07 1.64.22 1.25-.85 1.8-.67 1.8-.67.35.89.13 1.55.06 1.71.42.46.67 1.03.67 1.74 0 2.49-1.52 3.04-2.96 3.2.23.2.44.59.44 1.2v1.77c0 .17.11.37.44.31A6.5 6.5 0 0014 7.5C14 3.91 11.09 1 7.5 1z" fill="currentColor"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+
+      <div class="hero-left">
+        <div class="hero-eyebrow">
+          <div class="eyebrow-dot"></div>
+          v0.1.0 — now on crates.io
+        </div>
+
+        <h1 class="hero-headline">
+          Email preprocessing<br>
+          for <em>LLM consumption</em>
+        </h1>
+
+        <p class="hero-sub">
+          Parse, clean, and structure raw emails into formats optimized for language models.
+          Written in Rust. Available for Node.js and Python.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/introduction/" class="btn-primary">
+            Get Started
+            <svg width="12" height="12" viewBox="0 0 15 15" fill="none"><path d="M7.5 1L13.5 7.5L7.5 14M13.5 7.5H1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="https://github.com/usemarbles/langmail" class="btn-secondary" target="_blank" rel="noopener">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="install-block">
+          <div class="install-header">
+            <span class="install-label">install</span>
+            <button class="copy-btn" data-copy="npm install langmail">copy</button>
+          </div>
+          <div class="install-body">
+            <span class="cm"># Node.js</span><br>
+            <span class="kw">npm</span> install langmail<br>
+            <br>
+            <span class="cm"># Python</span><br>
+            <span class="kw">pip</span> install langmail<br>
+            <br>
+            <span class="cm"># Rust</span><br>
+            <span class="kw">cargo</span> add langmail-core
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="container">
+    <div class="section-eyebrow">What it does</div>
+
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">#_</div>
+        <div class="feature-title">HTML to Markdown</div>
+        <div class="feature-desc">Converts HTML email bodies to clean Markdown. Preserves semantic structure, strips tracking pixels and decorative elements.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">&#8617;</div>
+        <div class="feature-title">Reply detection</div>
+        <div class="feature-desc">Identifies and removes quoted content across Gmail, Outlook, Apple Mail, and non-standard clients. Works in multiple languages.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">&#8212; &#8212;</div>
+        <div class="feature-title">Signature stripping</div>
+        <div class="feature-desc">Detects and removes email signatures using heuristic pattern matching. No ML, no training data required.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">&#8594;</div>
+        <div class="feature-title">CTA extraction</div>
+        <div class="feature-desc">Surfaces calls-to-action by position analysis and structural patterns. Returns structured data your LLM can act on.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CODE EXAMPLE -->
+<section class="code-section">
+  <div class="container">
+    <div class="code-section-inner">
+
+      <div class="code-left">
+        <h2 class="code-headline">
+          From raw email<br>to <em>clean context</em>
+        </h2>
+        <p class="code-desc">
+          Two functions. One pipeline. Pass a raw RFC 5322 email string to
+          <span class="inline-code">preprocess</span>, then serialize the result
+          with <span class="inline-code">toLLMContext</span>.
+          What comes out is clean Markdown — no noise, no quoted history,
+          no signature clutter.
+        </p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">01</div>
+            <div class="step-text">
+              <strong>preprocess(raw)</strong> — parses the MIME structure,
+              extracts the relevant body variant, strips reply chains and signatures.
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">02</div>
+            <div class="step-text">
+              <strong>toLLMContext(parsed)</strong> — serializes the structured
+              result into a Markdown string, ready to drop into a prompt.
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">03</div>
+            <div class="step-text">
+              Pass the output directly to your LLM. No further cleaning needed.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-right">
+        <!-- Language tabs -->
+        <div class="lang-tabs">
+          <div class="lang-tab active">TypeScript</div>
+          <div class="lang-tab" style="opacity:0.5; cursor:default">Python</div>
+          <div class="lang-tab" style="opacity:0.5; cursor:default">Rust</div>
+        </div>
+
+        <!-- Code block -->
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">example.ts</span>
+            <button class="copy-btn" data-copy={`import { preprocess, toLLMContext } from "langmail"\nimport { readFileSync } from "fs"\n\nconst raw = readFileSync("email.eml", "utf8")\nconst parsed = await preprocess(raw)\nconst context = toLLMContext(parsed)\n\nllm.complete({ messages: [\n  { role: "user", content: context }\n]})`}>copy</button>
+          </div>
+          <div class="code-body">
+<span class="kw">import</span> {"{"} <span class="fn">preprocess</span>, <span class="fn">toLLMContext</span> {"}"} <span class="kw">from</span> <span class="str">"langmail"</span><br/>
+<span class="kw">import</span> {"{"} <span class="fn">readFileSync</span> {"}"} <span class="kw">from</span> <span class="str">"fs"</span><br/>
+<br/>
+<span class="cm">// raw RFC 5322 email string</span><br/>
+<span class="kw">const</span> raw = <span class="fn">readFileSync</span>(<span class="str">"email.eml"</span>, <span class="str">"utf8"</span>)<br/>
+<br/>
+<span class="cm">// parse and clean</span><br/>
+<span class="kw">const</span> parsed = <span class="kw">await</span> <span class="fn">preprocess</span>(raw)<br/>
+<br/>
+<span class="cm">// serialize to LLM-ready Markdown</span><br/>
+<span class="kw">const</span> context = <span class="fn">toLLMContext</span>(parsed)<br/>
+<br/>
+<span class="cm">// drop into your prompt</span><br/>
+<span class="fn">llm</span>.complete({"{"} messages: [<br/>
+&nbsp;&nbsp;{"{"} role: <span class="str">"user"</span>, content: context {"}"}<br/>
+]{"}"})
+          </div>
+        </div>
+
+        <!-- Output block -->
+        <div class="output-block">
+          <div class="output-header">
+            <div class="output-dot"></div>
+            context output
+          </div>
+          <div class="output-body">
+<span class="out-key">From:</span> <span class="out-val">Alice &lt;alice@example.com&gt;</span><br/>
+<span class="out-key">Subject:</span> <span class="out-val">Q4 budget review</span><br/>
+<span class="out-key">Date:</span> <span class="out-val">2024-11-12</span><br/>
+<br/>
+<span class="out-md">Hi,</span><br/>
+<br/>
+<span class="out-md">Following up on the Q4 numbers. Can you send</span><br/>
+<span class="out-md">the updated forecast by Friday?</span><br/>
+<br/>
+<span class="out-md">— [quoted reply removed] —</span><br/>
+<span class="out-md">— [signature removed] —</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+
+      <a href="/" class="footer-logo">
+        <svg width="18" height="13" viewBox="0 0 40 30" fill="none">
+          <rect x="1" y="1" width="38" height="28" rx="2" stroke="#F4F0E8" stroke-width="1.5"/>
+          <path d="M1 4L20 17L39 4" stroke="#E8A838" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark" style="font-size:15px"><span class="lang">lang</span><span class="mail">mail</span></div>
+      </a>
+
+      <div class="footer-meta">
+        <a href="/introduction/" class="footer-link">Docs</a>
+        <a href="https://github.com/usemarbles/langmail" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/usemarbles/langmail/blob/main/LICENSE" class="footer-link" target="_blank" rel="noopener">MIT License</a>
+      </div>
+
+      <div class="footer-right">
+        Built by <a href="https://usemarbles.com" target="_blank" rel="noopener">Marbles</a>
+      </div>
+
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-copy') || btn.closest('.install-block, .code-block')?.querySelector('.install-body, .code-body')?.textContent || '';
+      navigator.clipboard.writeText(text.trim()).then(() => {
+        btn.textContent = 'copied';
+        setTimeout(() => { btn.textContent = 'copy'; }, 2000);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

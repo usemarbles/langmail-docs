@@ -1,0 +1,43 @@
+/* langmail brand overrides for Starlight */
+
+:root {
+  --sl-color-black: #0F0D0A;
+  --sl-color-gray-1: #F4F0E8;
+  --sl-color-gray-2: #C4B898;
+  --sl-color-gray-3: #8A7A5A;
+  --sl-color-gray-4: #4A4030;
+  --sl-color-gray-5: #2E2618;
+  --sl-color-gray-6: #1A1610;
+  --sl-color-gray-7: #0F0D0A;
+
+  --sl-color-accent-low: #221A08;
+  --sl-color-accent: #E8A838;
+  --sl-color-accent-high: #F0C878;
+
+  --sl-color-white: #F4F0E8;
+
+  --sl-font: "Geist", system-ui, sans-serif;
+  --sl-font-mono: "Geist Mono", monospace;
+
+  --sl-color-bg-nav: #0F0D0A;
+  --sl-color-bg-sidebar: #0F0D0A;
+  --sl-color-hairline-light: #2E2618;
+  --sl-color-hairline-shade: #2E2618;
+}
+
+/* Force dark color scheme */
+:root,
+::backdrop {
+  color-scheme: dark;
+}
+
+/* Serif headings */
+h1,
+h2 {
+  font-family: "Lora", Georgia, serif !important;
+}
+
+/* Remove any Starlight light-mode styling */
+:root[data-theme="light"] {
+  color-scheme: dark;
+}
