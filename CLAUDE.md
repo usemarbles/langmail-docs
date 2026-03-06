@@ -5,6 +5,7 @@
 This is the documentation site for [langmail](https://github.com/usemarbles/langmail), an open-source email preprocessing library for LLM consumption.
 
 The site is separate from the library repo and will be deployed at `langmail.dev`.
+Hosted on **GitHub Pages** (repo: `usemarbles/langmail-docs`, deployed via GitHub Actions workflow).
 
 ## Stack
 
