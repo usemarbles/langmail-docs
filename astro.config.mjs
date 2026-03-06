@@ -1,11 +1,12 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightChangelogs from "starlight-changelogs";
 
 export default defineConfig({
   site: "https://langmail.dev",
-  legacy: { collections: true },
   integrations: [
     starlight({
+      plugins: [starlightChangelogs()],
       title: "langmail",
       customCss: ["./src/styles/theme.css"],
       social: [
@@ -96,7 +97,7 @@ export default defineConfig({
         {
           label: "Project",
           items: [
-            { label: "Changelog", slug: "changelog" },
+            { label: "Changelog", link: "/changelog/" },
           ],
         },
       ],
