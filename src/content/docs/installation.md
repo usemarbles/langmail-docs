@@ -27,15 +27,15 @@ pip install langmail
 
 ## Rust
 
-Add `langmail-core` as a dependency in your `Cargo.toml`.
+Add `langmail` as a dependency in your `Cargo.toml`.
 
 ```sh
-cargo add langmail-core
+cargo add langmail
 ```
 
 ```toml
 [dependencies]
-langmail-core = "0.1"
+langmail = "0.1"
 ```
 
 :::note

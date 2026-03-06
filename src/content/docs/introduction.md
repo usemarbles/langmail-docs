@@ -25,7 +25,7 @@ The core library is written in Rust for performance and cross-platform compilati
 
 - **Node.js** — via napi-rs, published to npm as `langmail`
 - **Python** — via PyO3, published to PyPI as `langmail`
-- **Rust** — published to crates.io as `langmail-core`
+- **Rust** — published to crates.io as `langmail`
 
 :::tip[Open Source]
 langmail is MIT licensed. Source code is on [GitHub](https://github.com/usemarbles/langmail). Contributions welcome.
